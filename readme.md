@@ -10,7 +10,7 @@ WipeDown acts as an automated security proxy firewall. It fetches messy web cont
 
 ```bash
 docker build -t wipedown .
-docker run --rm -v $(pwd)/wipedown_output:/app/wipedown_output wipedown fetch [https://example.com](https://example.com) --strict
+docker run --rm -v $(pwd)/wipedown_output:/app/wipedown_output wipedown fetch https://example.com --strict
 ```
 
 ---
@@ -37,29 +37,102 @@ docker run --rm -v $(pwd)/wipedown_output:/app/wipedown_output wipedown fetch [h
 ## 🚀 Usage
 
 ### Mode A: Local HTTP Proxy (Recommended for Agents)
-Run the background proxy server once to let your agents automatically clean web data on-the-fly:
+WipeDown is built to protect autonomous agents (like `Cline`, `Roo Code`, or custom LangChain setups) from web-based prompt injections. Spin up the background defense proxy:
+
 ```bash
-wipedown serve
+wipedown serve --port 8010
 ```
-The server spins up at `http://127.0.0.1:8010`. You can now configure your coding agent (Aider, Cursor, etc.) to use this endpoint as its web fetch utility destination:
+
+The server spins up at `http://127.0.0.1:8010`. Once running, configure your agent's browser or data-fetching tool to route all external URLs through the WipeDown endpoint:
+
 ```text
-[http://127.0.0.1:8010/fetch?url=https://x.com/username/status/123456789](http://127.0.0.1:8010/fetch?url=https://x.com/username/status/123456789)
+http://127.0.0.1:8010/fetch?url=https://example.com/untrusted-page
 ```
+
+You can now configure your coding agent (Aider, Cursor, etc.) to use this endpoint as its web fetch utility destination. WipeDown will securely intercept the page, structurally strip layouts, execute signature tracking, semantically neutralize hidden injection threats, and return a clean, safe Markdown payload to your agent.
 
 ### Mode B: Manual CLI Commands
+
 ```bash
 # Fetch and sanitize a standard webpage
-wipedown fetch [https://example.com](https://example.com)
+wipedown fetch https://example.com
 
 # Fetch an X/Twitter link via automatic proxy mirror rotation
-wipedown fetch [https://x.com/username/status/123456789](https://x.com/username/status/123456789) --strict
+wipedown fetch https://x.com/username/status/123456789 --strict
 
 # Load and process a local file securely
 wipedown fetch file:///path/to/your/document.html
 
 # Pure deterministic mode (structural HTML strip only, no LLM layer)
-wipedown fetch [https://example.com](https://example.com) --no-sanitize
+wipedown fetch https://example.com --no-sanitize
 ```
+
+---
+
+## ⚙️ Configuration (Bring Your Own Model)
+
+WipeDown is entirely engine-agnostic and interfaces with any OpenAI-compatible API endpoint. You can configure your runtime globally via environment variables or pass them dynamically inline using CLI flags.
+
+| Environment Variable | CLI Flag | Default Value | Description |
+| :--- | :--- | :--- | :--- |
+| `WIPEDOWN_API_URL` | `-u`, `--api-url` | `http://127.0.0.1:8080/v1` | The base endpoint of your LLM server. |
+| `WIPEDOWN_MODEL`   | `-m`, `--model`   | `qwen-3.6` | The specific model identifier to target. |
+| `WIPEDOWN_API_KEY` | *N/A* | *None* | Secure bearer token (required for cloud endpoints). |
+
+---
+
+### 🔌 Provider Setup Examples
+
+#### 1. Local `llama.cpp` / `llama-server` (High-Performance Workstation)
+If you are running self-hosted hardware via a native server binary:
+```bash
+export WIPEDOWN_API_URL="http://127.0.0.1:8080/v1"
+export WIPEDOWN_MODEL="your-local-model-name"
+wipedown test
+```
+
+#### 2. Local Ollama Daemon
+
+If you are running Ollama locally in the background, remember to append the `/v1` compatibility layer to the route:
+
+```bash
+export WIPEDOWN_API_URL="http://127.0.0.1:11434/v1"
+export WIPEDOWN_MODEL="qwen2.5:7b" # Or your preferred local pull
+wipedown test
+```
+
+#### 3. Cloud Providers (e.g., OpenAI, Groq)
+
+To offload sanitization processing workloads entirely to cloud-hosted acceleration endpoints:
+
+```bash
+export WIPEDOWN_API_URL="https://api.openai.com/v1"
+export WIPEDOWN_MODEL="gpt-4o-mini"
+export WIPEDOWN_API_KEY="sk-proj-..."
+wipedown test
+```
+
+---
+
+## 🧠 Native Deep Reasoning Model Support
+
+WipeDown features an advanced, multi-key hybrid stream parser engineered specifically for modern reasoning models (such as `Qwen 3.6`, `DeepSeek`, etc.).
+
+When routing data through a reasoning engine, WipeDown isolates and renders the hidden internal thought structures (`reasoning_content`) natively in your console stream before processing the final text output wrapper. This allows you to audit the model's defensive calculations in real-time.
+
+---
+
+## 🤖 Agent Auto-Configuration (Zero-Tinkering)
+
+WipeDown features a native workstation auto-discovery engine designed to let your coding agent configure the environment completely hands-free.
+
+If you are using an autonomous agent (like `Cline` or `Roo Code`), simply instruct it to initialize the system:
+
+```bash
+wipedown configure --auto
+```
+
+WipeDown will dynamically check for active local inference setups (scanning `llama-server` allocations, checking `Ollama` daemon registers, and evaluating hardware bounds) and write a perfectly tailored, accelerated `.env` file to your workspace instantly.
 
 ---
 
