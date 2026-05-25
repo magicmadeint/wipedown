@@ -13,7 +13,7 @@ def signature_check(text: str) -> tuple[bool, str]:
             return True, f"Potential injection pattern detected: {pattern}"
     return False, ""
 
-def sanitize_with_llm(text: str, model: str = "qwen3:4b") -> str:
+def sanitize_with_llm(text: str, model: str = "qwen3:4b", show_stream: bool = False) -> str:
     """Stage 2: Core moat — standardized with streaming token trap constraints."""
     if not text.strip():
         return text
@@ -65,24 +65,39 @@ Now sanitize the following content:"""
             messages=[{"role": "system", "content": prompt}, {"role": "user", "content": text}],
             options={
                 "temperature": 0.1,
-                "num_predict": 4096,
+                "num_predict": 1024,  # Optimized from 4096 to prevent prefill compute stalls on 4B models
             },
             stream=True
         )
         
         full_response = []
         for chunk in stream:
-            full_response.append(chunk['message']['content'])
+            content = ""
+            if isinstance(chunk, dict):
+                content = chunk.get('message', {}).get('content', '')
+            else:
+                try:
+                    content = chunk['message']['content']
+                except (TypeError, KeyError, AttributeError):
+                    try:
+                        content = chunk.message.content
+                    except AttributeError:
+                        pass
+            
+            if content:
+                full_response.append(content)
+                if show_stream:
+                    print(content, end="", flush=True)
             
         return "".join(full_response).strip()
     except Exception as e:
         print(f"⚠ LLM sanitization failed: {e} (falling back to raw text)")
         return text
 
-def chunk_and_sanitize(text: str, model: str = "qwen3:4b", chunk_size: int = 8000) -> str:
+def chunk_and_sanitize(text: str, model: str = "qwen3:4b", chunk_size: int = 8000, show_stream: bool = False) -> str:
     """Safe paragraph-based chunking."""
     if len(text) <= chunk_size:
-        return sanitize_with_llm(text, model)
+        return sanitize_with_llm(text, model, show_stream=show_stream)
     
     paragraphs = text.split("\n\n")
     current_chunk = []
@@ -92,7 +107,7 @@ def chunk_and_sanitize(text: str, model: str = "qwen3:4b", chunk_size: int = 800
     for para in paragraphs:
         if current_length + len(para) > chunk_size:
             chunk_text = "\n\n".join(current_chunk)
-            sanitized_chunks.append(sanitize_with_llm(chunk_text, model))
+            sanitized_chunks.append(sanitize_with_llm(chunk_text, model, show_stream=show_stream))
             current_chunk = [para]
             current_length = len(para)
         else:
@@ -101,6 +116,6 @@ def chunk_and_sanitize(text: str, model: str = "qwen3:4b", chunk_size: int = 800
             
     if current_chunk:
         chunk_text = "\n\n".join(current_chunk)
-        sanitized_chunks.append(sanitize_with_llm(chunk_text, model))
+        sanitized_chunks.append(sanitize_with_llm(chunk_text, model, show_stream=show_stream))
         
     return "\n\n".join(sanitized_chunks)

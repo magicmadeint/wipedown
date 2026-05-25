@@ -1,6 +1,6 @@
 # 🛡️ WipeDown — Zero-Trust Semantic Scraper (v0.2.0)
 
-Prevents prompt injections from web pages & tweets **before** they reach your local coding agent (Aider, Cursor, Claude Code, etc.).
+Prevents prompt injections from web pages & tweets **before** they reach your local coding agent (Hermes, Qwen Code, Cursor, Claude Code, etc.).
 
 WipeDown acts as an automated security proxy firewall. It fetches messy web content, strips malicious formatting manipulation blocks, detects known injection signatures, and uses a local LLM stream to safely neutralize imperative commands into secure, passive documentation context.
 
