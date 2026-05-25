@@ -2,15 +2,12 @@ import re
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 
-# Updated active Nitter-style instances (May 2026)
+# Pruned operational mirrors prioritizing xcancel (Verified May 2026)
 NITTER_INSTANCES = [
-    "xcancel.com",           # Currently one of the most reliable
-    "nitter.poast.org",
+    "xcancel.com",           # Primary operational mirror
     "nitter.privacydev.net",
+    "nitter.poast.org",
     "nitter.tiekoetter.com",
-    "nitter.catsarch.com",
-    "nitter.kareem.one",
-    "nitter.privacyredirect.com",
 ]
 
 def get_scrape_targets(url: str) -> list[str]:
@@ -22,7 +19,6 @@ def get_scrape_targets(url: str) -> list[str]:
     if domain in ["x.com", "twitter.com", "www.x.com", "www.twitter.com"]:
         for instance in NITTER_INSTANCES:
             new_url = url.replace(parsed.netloc, instance)
-            # Most instances (including xcancel) work best without the extra /i/
             if "/i/status/" in new_url:
                 new_url = new_url.replace("/i/status/", "/status/")
             targets.append(new_url)

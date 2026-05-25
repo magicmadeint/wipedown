@@ -13,8 +13,8 @@ def signature_check(text: str) -> tuple[bool, str]:
             return True, f"Potential injection pattern detected: {pattern}"
     return False, ""
 
-def sanitize_with_llm(text: str, model: str = "qwen3:4b") -> str:
-    """Stage 2: Core moat — now outputs full cleaned Markdown with safety report at top."""
+def sanitize_with_llm(text: str, model: str = "qwen2.5:1.5b") -> str:
+    """Stage 2: Core moat — standardized with streaming token trap constraints."""
     if not text.strip():
         return text
     
@@ -59,16 +59,27 @@ OR if you sanitized anything:
 Now sanitize the following content:"""
 
     try:
-        response = ollama.chat(
+        # Activated streaming collection to circumvent hardcoded 5-minute timeout windows
+        stream = ollama.chat(
             model=model,
-            messages=[{"role": "system", "content": prompt}, {"role": "user", "content": text}]
+            messages=[{"role": "system", "content": prompt}, {"role": "user", "content": text}],
+            options={
+                "temperature": 0.1,      # Restricts model from wandering out of template logic
+                "num_predict": 4096,     # Direct circuit breaker for runaway infinite loop conditions
+            },
+            stream=True
         )
-        return response['message']['content'].strip()
+        
+        full_response = []
+        for chunk in stream:
+            full_response.append(chunk['message']['content'])
+            
+        return "".join(full_response).strip()
     except Exception as e:
         print(f"⚠ LLM sanitization failed: {e} (falling back to raw text)")
         return text
 
-def chunk_and_sanitize(text: str, model: str = "qwen3:4b", chunk_size: int = 8000) -> str:
+def chunk_and_sanitize(text: str, model: str = "qwen2.5:1.5b", chunk_size: int = 8000) -> str:
     """Safe paragraph-based chunking."""
     if len(text) <= chunk_size:
         return sanitize_with_llm(text, model)
