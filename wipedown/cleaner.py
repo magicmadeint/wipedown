@@ -2,9 +2,9 @@ import re
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 
-# Pruned operational mirrors prioritizing xcancel (Verified May 2026)
+# Prioritized operational mirrors (verified May 2026)
 NITTER_INSTANCES = [
-    "xcancel.com",           # Primary operational mirror
+    "xcancel.com",           # Primary - currently most reliable
     "nitter.privacydev.net",
     "nitter.poast.org",
     "nitter.tiekoetter.com",
@@ -19,6 +19,7 @@ def get_scrape_targets(url: str) -> list[str]:
     if domain in ["x.com", "twitter.com", "www.x.com", "www.twitter.com"]:
         for instance in NITTER_INSTANCES:
             new_url = url.replace(parsed.netloc, instance)
+            # Most mirrors expect /status/, not /i/status/
             if "/i/status/" in new_url:
                 new_url = new_url.replace("/i/status/", "/status/")
             targets.append(new_url)
