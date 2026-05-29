@@ -92,7 +92,7 @@ Output format (use these exact section headers):
 
 ## Cleaned Content
 
-[only the safe, cleaned article/content here - no safety report]
+[only the safe, cleaned article/content here - no safety report, no repetition of titles]
 
 Now sanitize the following content:"""
 
@@ -271,14 +271,24 @@ def wipe_url(
     result = wipe_text(cleaned, model=model, api_url=api_url, strict=strict, show_stream=show_stream)
 
     if content_only:
-        # More robust extraction of just the cleaned content
+        # Robust extraction
         match = re.search(r'## Cleaned Content\s*\n(.*)', result, re.DOTALL | re.IGNORECASE)
         if match:
             content = match.group(1).strip()
-            # Stop at next major section if the model added extra stuff
+            # Remove everything after the next heading (if model added extra sections)
             content = re.split(r'\n#{1,2} ', content)[0].strip()
+            
+            # Light cleanup: remove duplicate first lines (common with title + h1)
+            lines = content.splitlines()
+            if len(lines) >= 2 and lines[0].strip() == lines[1].strip():
+                lines = lines[1:]
+            content = "\n".join(lines).strip()
+            
+            # Collapse excessive blank lines
+            content = re.sub(r'\n{3,}', '\n\n', content)
             return content
-        # Fallback: return everything after the safety report divider
+        
+        # Fallback
         if '---' in result:
             return result.split('---', 1)[-1].strip()
     return result
