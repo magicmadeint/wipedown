@@ -21,14 +21,14 @@ def signature_check(text: str) -> tuple[bool, str]:
     text_lower = text.lower()
 
     patterns = [
-        r'(?i)(ignore (all )?previous|override|jailbreak|developer mode|dan mode|system prompt)',
+        r'(?i)(ignore\s+(all\s+)?previous|override|jailbreak|developer\s+mode|system\s+prompt)',
         r'(?i)(you must|execute this|run this|do the following|new instructions)',
-        r'(?i)(forget everything|disregard|act as if|from now on you are)',
+        r'(?i)(forget\s+everything|disregard|act\s+as\s+if|from\s+now\s+on\s+you\s+are)',
         r'(?i)(base64|rot13|decode this|encoded payload)',
         r'\{.*"role":\s*"system".*\}',
-        r'(?i)(download .*?\.(sh|exe|bat|ps1)|curl |wget |powershell|bash -c)',
-        r'(?i)(rm -rf|del /f|format c:|shutdown|restart now)',
-        r'(?i)(your new task is|your updated instructions are|primary objective now)',
+        r'(?i)(download\s+.*?\.(sh|exe|bat|ps1)|curl\s+|wget\s+|powershell|bash\s+-c)',
+        r'(?i)(\brm\s+-rf|del\s+/f|format\s+c:|shutdown|restart\s+now)',
+        r'(?i)(your\s+new\s+task\s+is|your\s+updated\s+instructions\s+are|primary\s+objective\s+now)',
     ]
 
     for pattern in patterns:
@@ -153,6 +153,10 @@ Now sanitize the following content:"""
                             print(content, end="", flush=True)
 
                 except Exception:
+                    # Clean up console state if stream breaks while in reasoning mode
+                    if in_reasoning and show_stream:
+                        print("\n[THOUGHT CHAIN END (STREAM INTERRUPTED)]\n", end="", flush=True)
+                        in_reasoning = False
                     continue
 
         if in_reasoning and show_stream:

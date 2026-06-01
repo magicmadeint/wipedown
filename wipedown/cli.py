@@ -87,8 +87,8 @@ def _process_url(
 
     if sanitize:
         final_output = chunk_and_sanitize(cleaned, model=model, api_url=api_url)
-        if content_only and "## Full Cleaned Content" in final_output:
-            parts = final_output.split("## Full Cleaned Content", 1)
+        if content_only and "## Cleaned Content" in final_output:
+            parts = final_output.split("## Cleaned Content", 1)
             return parts[1].strip()
         return final_output
         
@@ -142,7 +142,7 @@ def serve(
     proxy_app = FastAPI(title="WipeDown Proxy", description="Zero-Trust Semantic Scraper Proxy")
 
     @proxy_app.get("/fetch")
-    async def proxy_fetch(
+    def proxy_fetch(
         url: str = Query(..., description="URL to sanitize"),
         sanitize_param: bool = Query(True, alias="sanitize"),
         raw_param: bool = Query(False, alias="raw"),
@@ -153,8 +153,8 @@ def serve(
             result = _process_url(
                 url=url,
                 sanitize=sanitize_param if sanitize_param is not None else sanitize,
-                model=model,
-                api_url=api_url,
+                model=model,      # Explicitly bound from serve() parameters
+                api_url=api_url,  # Explicitly bound from serve() parameters
                 raw=raw_param,
                 strict=strict_param,
                 content_only=content_only_param,
