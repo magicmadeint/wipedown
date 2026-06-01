@@ -153,6 +153,10 @@ Now sanitize the following content:"""
                             print(content, end="", flush=True)
 
                 except Exception:
+                    # Clean up console state if stream breaks while in reasoning mode
+                    if in_reasoning and show_stream:
+                        print("\n[THOUGHT CHAIN END (STREAM INTERRUPTED)]\n", end="", flush=True)
+                        in_reasoning = False
                     continue
 
         if in_reasoning and show_stream:
