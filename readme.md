@@ -1,8 +1,60 @@
-# 🛡️ WipeDown — Zero-Trust Semantic Scraper (v0.2.0)
+# 🛡️ WipeDown — Zero-Trust Semantic Scraper (v1.0.0)
 
 Prevents prompt injections from web pages & tweets **before** they reach your local coding agent (Hermes, Qwen Code, Cursor, Claude Code, etc.).
 
 WipeDown acts as an automated security proxy firewall. It fetches messy web content, strips malicious formatting manipulation blocks, detects known injection signatures, and uses a local LLM stream to safely neutralize imperative commands into secure, passive documentation context.
+
+---
+
+## 🧠 Programmatic Usage (Recommended for Agents & Brain Stacks)
+
+If you're building or integrating with agentic systems (BrainFood, Cursor, Aider, custom agents, etc.), the recommended way to use WipeDown is through the `WipeDown` class. It provides a clean, silent, and structured interface designed for programmatic consumption.
+
+```python
+from wipedown import WipeDown
+
+# Initialize once
+firewall = WipeDown(
+    model="qwen-3.6",
+    api_url="http://127.0.0.1:8080/v1"
+)
+
+# Clean any URL or local file
+result = firewall.wipe_url("https://example.com/some-article")
+
+print(result["status"])           # "success" or "flagged"
+print(result["source"])           # original URL
+print(result["content"])          # pristine sanitized text only
+print(result["metadata"]["safety_report"])
+```
+
+### Structured Output Contract
+
+When using the `WipeDown` class (or `structured=True`), you receive a clean, agent-friendly data contract:
+
+```json
+{
+  "status": "success",
+  "source": "https://...",
+  "content": "The actual cleaned, raw text content...",
+  "metadata": {
+    "timestamp": "...",
+    "signatures_checked": [...],
+    "sanitization_events": [...],
+    "safety_report": "Human-readable safety summary..."
+  },
+  "error": null
+}
+```
+
+**Key guarantees:**
+- `content` contains **only** the sanitized text (no synthetic headers or safety reports mixed in).
+- All operational metadata lives in the `metadata` object.
+- Fully malicious input returns `status: "flagged"` with an empty `content`.
+
+This design makes it trivial and safe to pipe WipeDown output directly into knowledge bases, curators, or agent memory systems like BrainFood.
+
+> **Note for existing users:** All previous usage of `wipe_text()`, `wipe_url()`, the CLI, and Docker remains fully supported and unchanged. The new structured path is additive.
 
 ---
 
