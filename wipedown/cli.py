@@ -87,8 +87,8 @@ def _process_url(
 
     if sanitize:
         final_output = chunk_and_sanitize(cleaned, model=model, api_url=api_url)
-        if content_only and "## Full Cleaned Content" in final_output:
-            parts = final_output.split("## Full Cleaned Content", 1)
+        if content_only and "## Cleaned Content" in final_output:
+            parts = final_output.split("## Cleaned Content", 1)
             return parts[1].strip()
         return final_output
         
@@ -142,7 +142,7 @@ def serve(
     proxy_app = FastAPI(title="WipeDown Proxy", description="Zero-Trust Semantic Scraper Proxy")
 
     @proxy_app.get("/fetch")
-    async def proxy_fetch(
+    def proxy_fetch(
         url: str = Query(..., description="URL to sanitize"),
         sanitize_param: bool = Query(True, alias="sanitize"),
         raw_param: bool = Query(False, alias="raw"),
@@ -172,8 +172,7 @@ def serve(
 
 @app.command("configure")
 def configure(
-    auto: bool = typer.Option(False, "--auto", help="Execute automatic workstation discovery engine")
-):
+    auto: bool = typer.Option(False, "--auto", help="Execute automatic workstation discovery engine"):
     """Automated workstation infrastructure discovery and local deployment context setup."""
     if not auto:
         console.print("[yellow]Manual menu setup not implemented. Run with option flag: --auto[/yellow]")
