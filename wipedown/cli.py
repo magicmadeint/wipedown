@@ -153,8 +153,8 @@ def serve(
             result = _process_url(
                 url=url,
                 sanitize=sanitize_param if sanitize_param is not None else sanitize,
-                model=model,
-                api_url=api_url,
+                model=model,      # Explicitly bound from serve() parameters
+                api_url=api_url,  # Explicitly bound from serve() parameters
                 raw=raw_param,
                 strict=strict_param,
                 content_only=content_only_param,
@@ -172,7 +172,8 @@ def serve(
 
 @app.command("configure")
 def configure(
-    auto: bool = typer.Option(False, "--auto", help="Execute automatic workstation discovery engine"):
+    auto: bool = typer.Option(False, "--auto", help="Execute automatic workstation discovery engine")
+):
     """Automated workstation infrastructure discovery and local deployment context setup."""
     if not auto:
         console.print("[yellow]Manual menu setup not implemented. Run with option flag: --auto[/yellow]")
