@@ -1,4 +1,4 @@
- """WipeDown Engine - Clean, silent, structured API for agentic brain stacks.
+"""WipeDown Engine - Clean, silent, structured API for agentic brain stacks.
 
 This module provides the WipeDown class for programmatic use in other projects
 like BrainFood, Cursor agents, custom LLM pipelines, etc.
